@@ -47,7 +47,7 @@ getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: 
 
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 bindir     = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\bin"
-libdir     = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\lib\\x86_64-windows-ghc-9.6.6\\fp3-haskell-0.1.0.0-D8nKmM4iYcT1QLvVWrl9Fn-fp3-haskell-exe"
+libdir     = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\lib\\x86_64-windows-ghc-9.6.6\\fp3-haskell-0.1.0.0-ArKLjfOBQm5LoLcSwaKlrr-fp3-haskell-exe"
 dynlibdir  = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\lib\\x86_64-windows-ghc-9.6.6"
 datadir    = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\share\\x86_64-windows-ghc-9.6.6\\fp3-haskell-0.1.0.0"
 libexecdir = "C:\\Projects\\fp3-haskell\\.stack-work\\install\\981c17e7\\libexec\\x86_64-windows-ghc-9.6.6\\fp3-haskell-0.1.0.0"

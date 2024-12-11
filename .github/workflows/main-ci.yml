@@ -16,3 +16,25 @@ jobs:
       with:
         path: '["src/"]'
         fail-on: suggestion
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 'Set up GHC'
+      uses: actions/setup-haskell@v1
+      with:
+        ghc-version: '9.6.6'
+        cabal-version: '3.6.2.0'
+
+    - name: 'Install dependencies'
+      run: |
+        stack setup
+        stack build --only-dependencies
+
+    - name: 'Build project'
+      run: stack build
+
+    - name: 'Run tests'
+      run: stack test

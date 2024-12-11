@@ -10,17 +10,10 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
 description:         Please see the README on GitHub at <https://github.com/githubuser/fp3-haskell#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base >= 4.7 && < 5
 
 ghc-options:
 - -Wall
@@ -35,6 +28,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+    - base
 
 executables:
   fp3-haskell-exe:
@@ -49,7 +44,7 @@ executables:
 
 tests:
   fp3-haskell-test:
-    main:                Spec.hs
+    main:                LibTests.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -57,3 +52,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - fp3-haskell
+    - HUnit

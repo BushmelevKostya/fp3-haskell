@@ -1,7 +1,7 @@
 @echo off
 
 set STEP=0.6 
-set ALGOTYPE=2 # 1 for Linear, 2 for Quadratic, 3 for Lagrange, 4 for All
+set ALGOTYPE=4 # 1 for Linear, 2 for Quadratic, 3 for Lagrange, 4 for All
 
 stack build
 

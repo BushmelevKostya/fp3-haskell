@@ -103,7 +103,7 @@
 #endif /* MIN_TOOL_VERSION_runghc */
 
 #ifndef CURRENT_COMPONENT_ID
-#define CURRENT_COMPONENT_ID "fp3-haskell-0.1.0.0-D8nKmM4iYcT1QLvVWrl9Fn-fp3-haskell-exe"
+#define CURRENT_COMPONENT_ID "fp3-haskell-0.1.0.0-ArKLjfOBQm5LoLcSwaKlrr-fp3-haskell-exe"
 #endif /* CURRENT_COMPONENT_ID */
 #ifndef CURRENT_PACKAGE_VERSION
 #define CURRENT_PACKAGE_VERSION "0.1.0.0"
