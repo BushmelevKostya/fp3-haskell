@@ -25,8 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      IO
-      Lib
+      EDSL
+      FSMRunner
+      Lift
   other-modules:
       Paths_fp3_haskell
   autogen-modules:
