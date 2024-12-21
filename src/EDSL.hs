@@ -50,7 +50,7 @@ runFSM (FSM _ trans initState) = foldl applyEvent initState
         _ -> currentState
       where
         matchTransition (Transition s1 e s2) = s1 == currentState && e == event
-        matchTransition (Impossible {}) = False
+        matchTransition Impossible {} = False
 
 showFSM :: FSM -> String
 showFSM (FSM states transitions initialState) =
