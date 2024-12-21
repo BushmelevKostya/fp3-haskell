@@ -1,7 +1,7 @@
 C:\Projects\fp3-haskell\.stack-work\dist\effaccc7\build\autogen\Paths_fp3_haskell.hs:
-  hash: f6b12c303022a90554d5084942b9f880f564af447d570698e917f4fd759bae87
+  hash: 33d4e72c89f9632d1c336a6f012963e4e71d5422cbd18dcf5000df9f286da69e
 C:\Projects\fp3-haskell\.stack-work\dist\effaccc7\build\autogen\cabal_macros.h:
-  hash: e4c8f98ad2c4c64c58a87b226176dc3e4a65714a3ab103a65ca4b3cc0c1cfd12
+  hash: 5fe1bd4bb1107edd406dc463433f6ac0b4480650fd6ee37b8c0ab663a7debfcc
 C:\Projects\fp3-haskell\CHANGELOG.md:
   hash: 41879d8efb3801f7255e953e9d58334d1d97e78ee793f3f6b0c38df17dde63fc
 C:\Projects\fp3-haskell\README.md:
@@ -11,9 +11,9 @@ C:\Projects\fp3-haskell\fp3-haskell.cabal:
 C:\Projects\fp3-haskell\package.yaml:
   hash: 9745e745616f96e1cd04ba8c7558e2c7fa26f80807f5c7beaf625ae7d7bcb378
 C:\Projects\fp3-haskell\src\EDSL.hs:
-  hash: a49da3d3d9378e47a414b9385aba46981e3a595355a889e5c37e10cb8c64ed5f
+  hash: e4818d6ff33577ca8d42297b1e6f6eab246a1e48e18101901b510d88d500a5b8
 C:\Projects\fp3-haskell\src\FSMRunner.hs:
-  hash: 8e02dbe752390f4a48f3d04acc185cb6eaa9402a96f10d7ec4f21f2b7dac444e
+  hash: 2d15cbd0f31c983847b6c45064ba3a159b045287ef5387e6de8620db4c69855e
 C:\Projects\fp3-haskell\src\Lift.hs:
   hash: 62ed43941f1407a5030e2e6c21048fb7bc72ce948f68667b6f78a5e972137c2a
 C:\Users\kosti\AppData\Local\Programs\stack\x86_64-windows\ghc-9.6.6\lib\x86_64-windows-ghc-9.6.6\rts-1.0.2\include\ghcversion.h:

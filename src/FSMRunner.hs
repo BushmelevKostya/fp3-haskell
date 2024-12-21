@@ -8,14 +8,14 @@ import EDSL (FSM(..), State(..), Transition(..))
 import Data.List (intercalate)
 
 runFSM :: FSM -> [String] -> State
-runFSM (FSM _ transitions initialState) events = foldl applyEvent initialState events
+runFSM (FSM _ transitions initialState) = foldl applyEvent initialState
   where
     applyEvent currentState event = case filter matchTransition transitions of
         (Transition _ _ nextState : _) -> nextState
         _ -> currentState
       where
         matchTransition (Transition s1 e s2) = s1 == currentState && e == event
-        matchTransition (Impossible _ _ _) = False
+        matchTransition (Impossible {}) = False
 
 showFSM :: FSM -> String
 showFSM (FSM states transitions initialState) =
