@@ -7,129 +7,284 @@
   * ИСУ: `367950`
 
 ---
-## Требования к разработанному ПО
-
-### Описание алгоритма
-
-1. **Линейная интерполяция**: Использует две последние точки для построения линейной функции.
-2. **Квадратичная интерполяция**: Использует три последние точки для построения квадратичной функции.
-3. **Интерполяция Лагранжа**: Использует шесть последних точек для построения полинома Лагранжа.
-
-### Требования
-
-- **Haskell**: Программа написана на языке Haskell.
-- **Stack**: Для сборки и запуска проекта используется Stack.
-- **Ввод данных**: Пользователь вводит точки в формате `X Y` через пробел.
-- **Вывод данных**: Программа выводит результаты интерполяции на стандартный вывод.
 
 ## Ключевые элементы реализации
 
-### `Lib.hs`
+### `EDSL.hs`
 
 ```haskell
-linearInterpolation :: [(Double, Double)] -> Double -> [(Double, Double)]
-linearInterpolation dots step = 
-    let 
-        (x2, y2) = last dots
-        (x1, y1) = last $ init dots
-        k = (y2 - y1) / (x2 - x1)
-        b = y1 - k * x1
-        generatePoints x
-            | x > x2 = []
-            | otherwise = (roundTo 2 x, roundTo 2 (k * x + b)) : generatePoints (x + step)
-    in
-        if length dots >= 2
-        then generatePoints x1
-        else []
+data State = State String deriving (Eq, Show)
 
-quadraticInterpolation :: [(Double, Double)] -> Double -> [(Double, Double)]
-quadraticInterpolation dots step =
-    let 
-        (x3, y3) = last dots
-        (x2, y2) = last $ init dots
-        (x1, y1) = last $ init $ init dots
-        a = ((y3 - y1) / (x3 - x1) - (y2 - y1) / (x2 - x1)) / (x3 - x2)
-        b = (y2 - y1) / (x2 - x1) - a * (x1 + x2)
-        c = y1 - a * x1 * x1 - b * x1
-        generatePoints x
-            | x > x3 = []
-            | otherwise = (roundTo 2 x, roundTo 2 (a * x * x + b * x + c)) : generatePoints (x + step)
-    in 
-        if length dots >= 3
-        then generatePoints x1
-        else []
+data Transition where
+    Transition :: State -> String -> State -> Transition
+    Impossible :: State -> String -> State -> Transition
 
-lagrangeInterpolation :: [(Double, Double)] -> Double -> [(Double, Double)]
-lagrangeInterpolation dots step =
-    let 
-        (x6, y6) = last dots
-        (x5, y5) = last $ init dots
-        (x4, y4) = last $ init $ init dots
-        (x3, y3) = last $ init $ init $ init dots
-        (x2, y2) = last $ init $ init $ init $ init dots
-        (x1, y1) = last $ init $ init $ init $ init $ init dots
-        l1 x = (x - x2) * (x - x3) * (x - x4) * (x - x5) * (x - x6) / ((x1 - x2) * (x1 - x3) * (x1 - x4) * (x1 - x5) * (x1 - x6))
-        l2 x = (x - x1) * (x - x3) * (x - x4) * (x - x5) * (x - x6) / ((x2 - x1) * (x2 - x3) * (x2 - x4) * (x2 - x5) * (x2 - x6))
-        l3 x = (x - x1) * (x - x2) * (x - x4) * (x - x5) * (x - x6) / ((x3 - x1) * (x3 - x2) * (x3 - x4) * (x3 - x5) * (x3 - x6))
-        l4 x = (x - x1) * (x - x2) * (x - x3) * (x - x5) * (x - x6) / ((x4 - x1) * (x4 - x2) * (x4 - x3) * (x4 - x5) * (x4 - x6))
-        l5 x = (x - x1) * (x - x2) * (x - x3) * (x - x4) * (x - x6) / ((x5 - x1) * (x5 - x2) * (x5 - x3) * (x5 - x4) * (x5 - x6))
-        l6 x = (x - x1) * (x - x2) * (x - x3) * (x - x4) * (x - x5) / ((x6 - x1) * (x6 - x2) * (x6 - x3) * (x6 - x4) * (x6 - x5))
-        generatePoints x
-            | x > x6 = []
-            | otherwise = (roundTo 2 x, roundTo 2 (y1 * l1 x + y2 * l2 x + y3 * l3 x + y4 * l4 x + y5 * l5 x + y6 * l6 x)) : generatePoints (x + step)
+instance Show Transition where
+    show (Transition (State s1) event (State s2)) = s1 ++ " --" ++ event ++ "--> " ++ s2
+    show (Impossible (State s1) event (State s2)) = s1 ++ " -/ " ++ event ++ " /-> " ++ s2
 
-    in
-        if length dots >= 6
-        then generatePoints x1
-        else []
+data FSM = FSM {
+    states :: [State],
+    transitions :: [Transition],
+    initialState :: State
+} deriving (Show)
+
+state :: String -> State
+state = State
+
+transition :: State -> String -> State -> Transition
+transition = Transition
+
+impossible :: State -> String -> State -> Transition
+impossible = Impossible
+
+fsm :: [State] -> [Transition] -> State -> FSM
+fsm = FSM
+
+runFSM :: FSM -> [String] -> State
+runFSM (FSM _ trans initState) = foldl applyEvent initState
+  where
+    applyEvent currentState event = case filter matchTransition trans of
+        (Transition _ _ nextState : _) -> nextState
+        _ -> currentState
+      where
+        matchTransition (Transition s1 e s2) = s1 == currentState && e == event
+        matchTransition (Impossible _ _ _) = False
+
+
+showFSM :: FSM -> String
+showFSM (FSM states transitions initialState) =
+    "States:\n" ++ intercalate "\n" (map show states) ++
+    "\n\nTransitions:\n" ++ intercalate "\n" (map show transitions) ++
+    "\n\nInitial State:\n" ++ show initialState
 ```
-### `IO.hs`
+### `FSMRunner.hs`
 ```haskell
-inputDot :: IO [(Double, Double)]
-inputDot = do
-    putStrLn "Ввод точки (X Y через пробел):"
-    str1 <- getLine
-    if null str1
-        then return []
-        else do
-            let [x, y] = map read $ words str1 :: [Double]
-            return [(x, y)]
+runFSM :: FSM -> [String] -> State
+runFSM (FSM _ transitions initialState) events = foldl applyEvent initialState events
+  where
+    applyEvent currentState event = case filter matchTransition transitions of
+        (Transition _ _ nextState : _) -> nextState
+        _ -> currentState
+      where
+        matchTransition (Transition s1 e s2) = s1 == currentState && e == event
+        matchTransition (Impossible _ _ _) = False
+
+showFSM :: FSM -> String
+showFSM (FSM states transitions initialState) =
+    "States:\n" ++ intercalate "\n" (map show states) ++
+    "\n\nTransitions:\n" ++ intercalate "\n" (map show transitions) ++
+    "\n\nInitial State:\n" ++ show initialState
+
+toDot :: FSM -> String
+toDot (FSM states transitions initialState) =
+    "digraph FSM {\n" ++
+    "  rankdir=LR;\n" ++
+    "  node [shape = circle];\n" ++
+    "  " ++ show initialState ++ " [shape = doublecircle];\n" ++
+    concatMap showTransition transitions ++
+    "}\n"
+  where
+    showTransition (Transition (State s1) event (State s2)) =
+        "  \"" ++ s1 ++ "\" -> \"" ++ s2 ++ "\" [label = \"" ++ event ++ "\"];\n"
+    showTransition (Impossible (State s1) event (State s2)) =
+        "  \"" ++ s1 ++ "\" -> \"" ++ s2 ++ "\" [label = \"" ++ event ++ "\", style = \"dashed\"];\n"
 ```
+### `Lift.hs`
+```haskell
+floor1, floor2, floor3, floor4, floor5 :: State
+floor1 = state "1st Floor"
+floor2 = state "2nd Floor"
+floor3 = state "3rd Floor"
+floor4 = state "4th Floor"
+floor5 = state "5th Floor"
+
+floor1WithPassengers, floor2WithPassengers, floor3WithPassengers, floor4WithPassengers, floor5WithPassengers :: State
+floor1WithPassengers = state "1st Floor with Passengers"
+floor2WithPassengers = state "2nd Floor with Passengers"
+floor3WithPassengers = state "3rd Floor with Passengers"
+floor4WithPassengers = state "4th Floor with Passengers"
+floor5WithPassengers = state "5th Floor with Passengers"
+
+liftFSM :: FSM
+liftFSM = fsm
+    [ floor1, floor2, floor3, floor4, floor5
+    , floor1WithPassengers, floor2WithPassengers, floor3WithPassengers, floor4WithPassengers, floor5WithPassengers
+    ]
+    --можно вызвать пустой лифт на любой этаж, кроме текущего
+    [ transition floor1 "call 2nd Floor" floor2
+    , transition floor1 "call 3rd Floor" floor3
+    , transition floor1 "call 4th Floor" floor4
+    , transition floor1 "call 5th Floor" floor5
+    , transition floor2 "call 1st Floor" floor1
+    , transition floor2 "call 3rd Floor" floor3
+    , transition floor2 "call 4th Floor" floor4
+    , transition floor2 "call 5th Floor" floor5
+    , transition floor3 "call 1st Floor" floor1
+    , transition floor3 "call 2nd Floor" floor2
+    , transition floor3 "call 4th Floor" floor4
+    , transition floor3 "call 5th Floor" floor5
+    , transition floor4 "call 1st Floor" floor1
+    , transition floor4 "call 2nd Floor" floor2
+    , transition floor4 "call 3rd Floor" floor3
+    , transition floor4 "call 5th Floor" floor5
+    , transition floor5 "call 1st Floor" floor1
+    , transition floor5 "call 2nd Floor" floor2
+    , transition floor5 "call 3rd Floor" floor3
+    , transition floor5 "call 4th Floor" floor4
+    --можно выпустить пассажиров на первом этаже
+    , transition floor1WithPassengers "deliver passengers" floor1
+    --можно доставить пассажиров на этажи ниже
+    , transition floor2WithPassengers "call 1st Floor" floor1WithPassengers
+    , transition floor3WithPassengers "call 2nd Floor" floor2WithPassengers
+    , transition floor3WithPassengers "call 1st Floor" floor1WithPassengers
+    , transition floor4WithPassengers "call 3rd Floor" floor3WithPassengers
+    , transition floor4WithPassengers "call 2nd Floor" floor2WithPassengers
+    , transition floor4WithPassengers "call 1st Floor" floor1WithPassengers
+    , transition floor5WithPassengers "call 4th Floor" floor4WithPassengers
+    , transition floor5WithPassengers "call 3rd Floor" floor3WithPassengers
+    , transition floor5WithPassengers "call 2nd Floor" floor2WithPassengers
+    , transition floor5WithPassengers "call 1st Floor" floor1WithPassengers
+    --нельзя вызвать лифт на тот же этаж
+    , impossible floor1 "call 1st Floor" floor1
+    , impossible floor2 "call 2nd Floor" floor2
+    , impossible floor3 "call 3rd Floor" floor3
+    , impossible floor4 "call 4th Floor" floor4
+    , impossible floor5 "call 5th Floor" floor5
+    --нельзя вызвать лифт с пассажирами на этажи выше
+    , impossible floor1WithPassengers "call 1st Floor" floor1WithPassengers
+    , impossible floor2WithPassengers "call 2nd Floor" floor2WithPassengers
+    , impossible floor3WithPassengers "call 3rd Floor" floor3WithPassengers
+    , impossible floor4WithPassengers "call 4th Floor" floor4WithPassengers
+    , impossible floor5WithPassengers "call 5th Floor" floor5WithPassengers
+    , impossible floor2WithPassengers "call 3nd Floor" floor3WithPassengers
+    , impossible floor2WithPassengers "call 4rd Floor" floor4WithPassengers
+    , impossible floor2WithPassengers "call 5th Floor" floor5WithPassengers
+    , impossible floor3WithPassengers "call 4th Floor" floor4WithPassengers
+    , impossible floor3WithPassengers "call 5th Floor" floor5WithPassengers
+    , impossible floor4WithPassengers "call 5th Floor" floor5WithPassengers
+    --можно посадить пассажиров
+    , transition floor1 "board passengers" floor1WithPassengers
+    , transition floor2 "board passengers" floor2WithPassengers
+    , transition floor3 "board passengers" floor3WithPassengers
+    , transition floor4 "board passengers" floor4WithPassengers
+    , transition floor5 "board passengers" floor5WithPassengers
+    ]
+    floor1
+```
+### `LibTests.hs`
+```haskell
+--перемещение лифта
+test1 :: Test
+test1 = TestCase (assertEqual "for events [\"call 2nd Floor\", \"call 3rd Floor\"]"
+                  (EDSL.State "3rd Floor")
+                  (runLiftFSM ["call 2nd Floor", "call 3rd Floor"]))
+--забор и привоз пассажирова
+test2 :: Test
+test2 = TestCase (assertEqual "for events [\"call 5th Floor\", \"board passengers\", \"call 1st Floor\", \"deliver passengers\"]"
+                  (EDSL.State "1st Floor")
+                  (runLiftFSM ["call 5th Floor", "board passengers", "call 1st Floor", "deliver passengers"]))
+
+--невозможность перехода на тот же этаж
+test3 :: Test
+test3 = TestCase (assertEqual "for events [\"call 3rd Floor\", \"call 3rd Floor\"]"
+                  (EDSL.State "3rd Floor")
+                  (runLiftFSM ["call 3rd Floor", "call 3rd Floor"]))
+
+--невозможность перехода на этаж выше с пассажирами
+test4 :: Test
+test4 = TestCase (assertEqual "for events [\"call 5th Floor\", \"board passengers\", \"call 2nd Floor\", \"call 3rd Floor\"]"
+                  (EDSL.State "2nd Floor with Passengers")
+                  (runLiftFSM ["call 5th Floor", "board passengers", "call 2nd Floor", "call 3rd floor"]))
+```
+
 ## Ввод/вывод программы
 ### Ввод
- - Пользователь вводит точки в формате X Y через пробел.
+ -Список событий для лифта.
 ### Вывод
 ```
-Ввод точки (X Y через пробел):
-1 1
-Ввод точки (X Y через пробел):
-2 4 
-Линейная, Квадратичная и Лагранж интерполяция с шагом 1.1:
-Линейная: [(1.0,1.0)],
-Квадратичная: [],
-Лагранж: []
-Ввод точки (X Y через пробел):
-3 27
-Линейная, Квадратичная и Лагранж интерполяция с шагом 1.1:
-Линейная: [(2.0,4.0)],
-Квадратичная: [(1.0,1.0),(2.1,5.4)],
-Лагранж: []
-Ввод точки (X Y через пробел):
-4 64
-Линейная, Квадратичная и Лагранж интерполяция с шагом 1.1:
-Линейная: [(3.0,27.0)],
-Квадратичная: [(2.0,4.0),(3.1,30.07)],
-Лагранж: []
-Ввод точки (X Y через пробел):
-5 125
-Линейная, Квадратичная и Лагранж интерполяция с шагом 1.1:
-Линейная: [(4.0,64.0)],
-Квадратичная: [(3.0,27.0),(4.1,69.02)],
-Лагранж: []
-Ввод точки (X Y через пробел):
-6 200
-Линейная, Квадратичная и Лагранж интерполяция с шагом 1.1:
-Линейная: [(5.0,125.0)],
-Квадратичная: [(4.0,64.0),(5.1,131.87)],
-Лагранж: [(1.0,1.0),(2.1,5.79),(3.2,32.96),(4.3,79.53),(5.4,155.37)]
+Lift FSM:
+States:
+State "1st Floor"
+State "2nd Floor"
+State "3rd Floor"
+State "4th Floor"
+State "5th Floor"
+State "1st Floor with Passengers"
+State "2nd Floor with Passengers"
+State "3rd Floor with Passengers"
+State "4th Floor with Passengers"
+State "5th Floor with Passengers"
+
+Transitions:
+1st Floor --call 2nd Floor--> 2nd Floor
+1st Floor --call 3rd Floor--> 3rd Floor
+1st Floor --call 4th Floor--> 4th Floor
+1st Floor --call 5th Floor--> 5th Floor
+2nd Floor --call 1st Floor--> 1st Floor
+2nd Floor --call 3rd Floor--> 3rd Floor
+2nd Floor --call 4th Floor--> 4th Floor
+2nd Floor --call 5th Floor--> 5th Floor
+3rd Floor --call 1st Floor--> 1st Floor
+3rd Floor --call 2nd Floor--> 2nd Floor
+3rd Floor --call 4th Floor--> 4th Floor
+3rd Floor --call 5th Floor--> 5th Floor
+4th Floor --call 1st Floor--> 1st Floor
+4th Floor --call 2nd Floor--> 2nd Floor
+4th Floor --call 3rd Floor--> 3rd Floor
+4th Floor --call 5th Floor--> 5th Floor
+5th Floor --call 1st Floor--> 1st Floor
+5th Floor --call 2nd Floor--> 2nd Floor
+5th Floor --call 3rd Floor--> 3rd Floor
+5th Floor --call 4th Floor--> 4th Floor
+1st Floor with Passengers --deliver passengers--> 1st Floor
+2nd Floor with Passengers --call 1st Floor--> 1st Floor with Passengers
+3rd Floor with Passengers --call 2nd Floor--> 2nd Floor with Passengers
+3rd Floor with Passengers --call 1st Floor--> 1st Floor with Passengers
+4th Floor with Passengers --call 3rd Floor--> 3rd Floor with Passengers
+4th Floor with Passengers --call 2nd Floor--> 2nd Floor with Passengers
+4th Floor with Passengers --call 1st Floor--> 1st Floor with Passengers
+5th Floor with Passengers --call 4th Floor--> 4th Floor with Passengers
+5th Floor with Passengers --call 3rd Floor--> 3rd Floor with Passengers
+5th Floor with Passengers --call 2nd Floor--> 2nd Floor with Passengers
+5th Floor with Passengers --call 1st Floor--> 1st Floor with Passengers
+1st Floor -/ call 1st Floor /-> 1st Floor
+2nd Floor -/ call 2nd Floor /-> 2nd Floor
+3rd Floor -/ call 3rd Floor /-> 3rd Floor
+4th Floor -/ call 4th Floor /-> 4th Floor
+5th Floor -/ call 5th Floor /-> 5th Floor
+1st Floor with Passengers -/ call 1st Floor /-> 1st Floor with Passengers
+2nd Floor with Passengers -/ call 2nd Floor /-> 2nd Floor with Passengers
+3rd Floor with Passengers -/ call 3rd Floor /-> 3rd Floor with Passengers
+4th Floor with Passengers -/ call 4th Floor /-> 4th Floor with Passengers
+5th Floor with Passengers -/ call 5th Floor /-> 5th Floor with Passengers
+2nd Floor with Passengers -/ call 3nd Floor /-> 3rd Floor with Passengers
+2nd Floor with Passengers -/ call 4rd Floor /-> 4th Floor with Passengers
+2nd Floor with Passengers -/ call 5th Floor /-> 5th Floor with Passengers
+3rd Floor with Passengers -/ call 4th Floor /-> 4th Floor with Passengers
+3rd Floor with Passengers -/ call 5th Floor /-> 5th Floor with Passengers
+4th Floor with Passengers -/ call 5th Floor /-> 5th Floor with Passengers
+1st Floor --board passengers--> 1st Floor with Passengers
+2nd Floor --board passengers--> 2nd Floor with Passengers
+3rd Floor --board passengers--> 3rd Floor with Passengers
+4th Floor --board passengers--> 4th Floor with Passengers
+5th Floor --board passengers--> 5th Floor with Passengers
+
+Initial State:
+State "1st Floor"
+
+Running events:
+Event: call 2nd Floor, State: State "2nd Floor"
+Event: call 3rd Floor, State: State "3rd Floor"
+Event: call 1st Floor, State: State "1st Floor"
+Event: call 5th Floor, State: State "5th Floor"
+Event: board passengers, State: State "5th Floor with Passengers"
+Event: call 4th Floor, State: State "4th Floor with Passengers"
+Event: call 3rd Floor, State: State "3rd Floor with Passengers"
+Event: call 2nd Floor, State: State "2nd Floor with Passengers"
+Event: call 1st Floor, State: State "1st Floor with Passengers"
+Event: deliver passengers, State: State "1st Floor"
+Final State: State "1st Floor"
+
+DOT description saved to fsm.dot
 ```
